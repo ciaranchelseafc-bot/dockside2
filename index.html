@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Dockside · Dockside Paddle Co.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            serif: ['Fraunces', 'Georgia', 'serif'],
+          },
+          colors: {
+            navy: {
+              950: '#091724',
+              900: '#0f2537',
+              800: '#17344d',
+              700: '#234969',
+            },
+            slatebg: {
+              50: '#f7f3eb',
+              100: '#efe9dc',
+              200: '#dfd6c5',
+            },
+            cream: {
+              50: '#fbf8f3',
+              100: '#f5efe4',
+              200: '#e8decb',
+            },
+            ink: {
+              900: '#131d29',
+              700: '#364152',
+              500: '#646e7d',
+              400: '#949ca8',
+            },
+            dock: {
+              teal: '#0d9488',
+              tealDark: '#0f766e',
+              tealLight: '#ccfbf1',
+              gold: '#c89d54',
+              goldLight: '#fef3c7',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .typing-dot {
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0.4); opacity: 0.35; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-cream-100 text-ink-900 font-sans antialiased min-h-screen flex flex-col selection:bg-dock-goldLight selection:text-navy-900">
+
+  <!-- High-Contrast Deep Navy Header -->
+  <header class="bg-navy-900 text-white border-b border-navy-800 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 h-14 flex items-center justify-between gap-3">
+      
+      <!-- Brand Wordmark -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-lg bg-dock-gold text-navy-950 flex items-center justify-center shrink-0 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16c2.5 0 2.5-1.8 5-1.8s2.5 1.8 5 1.8 2.5-1.8 5-1.8 2.5 1.8 3 1.8M15 4l5 5m-1.5-3.5L9.5 14.5l-2.5.8.8-2.5L16.8 3.8z" />
+          </svg>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <h1 class="font-serif text-lg sm:text-xl font-semibold tracking-tight text-white">
+            Dockside <span class="italic font-medium text-dock-gold">Desk</span>
+          </h1>
+          <span class="hidden sm:inline text-xs text-slate-300 font-medium">Grand Canal Dock, Dublin</span>
+        </div>
+      </div>
+
+      <!-- Status Pills & Controls -->
+      <div class="flex items-center gap-2">
+        <div class="hidden md:flex items-center gap-2.5 text-xs text-slate-200 bg-navy-950/70 px-3 py-1 rounded-full border border-navy-700/80">
+          <span id="pill-csv" class="inline-flex items-center gap-1.5" title="Sessions CSV status">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Sessions
+          </span>
+          <span class="text-navy-700">·</span>
+          <span id="pill-weather" class="inline-flex items-center gap-1.5" title="Open-Meteo Weather status">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Weather
+          </span>
+          <span class="text-navy-700">·</span>
+          <span id="pill-brain" class="inline-flex items-center gap-1.5" title="BDAIB Brain status">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Desk
+          </span>
+        </div>
+
+        <!-- Refresh Data -->
+        <button id="refresh-btn" onclick="refreshAllLiveData(true)" title="Sync live CSV & weather"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-white bg-navy-800 hover:bg-navy-700 border border-navy-700 transition cursor-pointer">
+          <svg id="refresh-icon" class="w-3.5 h-3.5 text-dock-gold" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden sm:inline">Sync</span>
+        </button>
+
+        <!-- Mobile Live Board Drawer Button -->
+        <button id="toggle-drawer-btn" onclick="toggleMobileInspector()"
+          class="lg:hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-dock-gold text-navy-950 transition cursor-pointer">
+          <span>Sessions &amp; Weather</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Subtle Warning Banner (Hidden unless fetch fails) -->
+  <div id="status-banner" class="hidden bg-amber-900 text-amber-50 border-b border-amber-700 px-3 py-1.5 text-xs">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <span id="status-banner-text">Checking live dock feeds...</span>
+      <button onclick="document.getElementById('status-banner').classList.add('hidden')" class="font-semibold underline">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Compact Two-Column Layout (5 cols Chat / 7 cols Live Sessions & Compact Weather) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-3.5 sm:py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+    <!-- LEFT: Compact Front-Desk Q&A Thread (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col bg-cream-50 rounded-2xl border border-cream-200 shadow-sm overflow-hidden h-[calc(100vh-5.25rem)] min-h-[520px]">
+      
+      <!-- Dark Slate Utility Bar -->
+      <div class="px-4 py-2.5 bg-navy-900 text-white flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-xs font-semibold tracking-wide">Ask the Dock Team</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="toggleDiagnostics()" class="text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer">
+            Logs
+          </button>
+          <button onclick="clearChat()" class="text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible Logs Drawer -->
+      <div id="diagnostics-drawer" class="hidden bg-navy-950 text-slate-200 border-b border-navy-800 px-4 py-2.5 text-xs">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-dock-gold">Connection &amp; Feed Logs</span>
+          <button onclick="toggleDiagnostics()" class="text-slate-300 hover:text-white underline cursor-pointer">Close</button>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 mb-2 text-[11px]">
+          <div class="bg-navy-900 border border-navy-800 rounded-lg p-2">
+            <div class="text-slate-400">Sessions CSV</div>
+            <div id="diag-csv-status" class="font-mono text-white mt-0.5 truncate">Pending...</div>
+          </div>
+          <div class="bg-navy-900 border border-navy-800 rounded-lg p-2">
+            <div class="text-slate-400">Open-Meteo</div>
+            <div id="diag-weather-status" class="font-mono text-white mt-0.5 truncate">Pending...</div>
+          </div>
+          <div class="bg-navy-900 border border-navy-800 rounded-lg p-2">
+            <div class="text-slate-400">Class Brain</div>
+            <div id="diag-brain-status" class="font-mono text-white mt-0.5 truncate">Ready</div>
+          </div>
+        </div>
+        <pre id="diag-log" class="bg-navy-900 border border-navy-800 rounded-lg p-2 font-mono text-[10px] text-slate-300 max-h-20 overflow-y-auto whitespace-pre-wrap">Waiting for requests...</pre>
+      </div>
+
+      <!-- Conversation Feed -->
+      <div id="chat-messages" class="flex-1 overflow-y-auto px-4 py-4 space-y-3.5 bg-cream-100/60">
+        <!-- Compact Welcome Card -->
+        <div class="bg-cream-50 border border-cream-200 rounded-xl p-3.5 shadow-2xs">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-dock-tealDark mb-1">Grand Canal Dock · Live Info</p>
+          <h2 class="font-serif text-base font-semibold text-navy-900 leading-snug mb-1">
+            Heading out on the water today?
+          </h2>
+          <p class="text-xs text-ink-700 leading-relaxed">
+            Ask about prices, spaces left, or wind suitability. Answers come straight from our live dock sheet and weather feed.
+          </p>
+        </div>
+      </div>
+
+      <!-- Compact Pill Prompts -->
+      <div class="px-3 py-2 bg-cream-50 border-t border-cream-200 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <button onclick="sendQuickPrompt('How much is paddleboarding?')"
+          class="shrink-0 text-[11px] font-semibold bg-cream-100 hover:bg-navy-900 hover:text-white text-navy-900 border border-cream-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+          Prices?
+        </button>
+        <button onclick="sendQuickPrompt('Are there places left today?')"
+          class="shrink-0 text-[11px] font-semibold bg-cream-100 hover:bg-navy-900 hover:text-white text-navy-900 border border-cream-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+          Places left?
+        </button>
+        <button onclick="sendQuickPrompt('Will it go ahead in this wind?')"
+          class="shrink-0 text-[11px] font-semibold bg-cream-100 hover:bg-navy-900 hover:text-white text-navy-900 border border-cream-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+          Go ahead in this wind?
+        </button>
+        <button onclick="sendQuickPrompt('Is the floating sauna open and what does it cost?')"
+          class="shrink-0 text-[11px] font-semibold bg-cream-100 hover:bg-navy-900 hover:text-white text-navy-900 border border-cream-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+          Floating sauna?
+        </button>
+      </div>
+
+      <!-- Compact Input Bar -->
+      <form id="chat-form" onsubmit="handleFormSubmit(event)" class="p-2.5 bg-cream-50 border-t border-cream-200">
+        <div class="flex items-center gap-2 bg-cream-100/80 focus-within:bg-white rounded-xl px-3 py-1.5 border border-cream-200 focus-within:border-navy-900 transition">
+          <input
+            id="user-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Ask about prices, spots, or wind..."
+            class="flex-1 bg-transparent text-ink-900 placeholder-ink-500 text-xs sm:text-sm py-1 focus:outline-none"
+          />
+          <button
+            id="send-btn"
+            type="submit"
+            class="inline-flex items-center justify-center bg-navy-900 hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition cursor-pointer shrink-0">
+            Send
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- RIGHT: Compact Weather Strip + Prominent Today's Sessions Board (7 cols) -->
+    <aside id="inspector-panel" class="hidden lg:flex lg:col-span-7 flex-col gap-3 h-[calc(100vh-5.25rem)] min-h-[520px] overflow-hidden">
+      
+      <!-- Compact Single-Bar Dock Conditions -->
+      <div class="bg-navy-900 text-white rounded-2xl px-4 py-2.5 border border-navy-800 shadow-sm shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-serif font-semibold text-white">Dock Weather</span>
+            <span id="weather-status-badge" class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-navy-800 text-slate-200">
+              Syncing...
+            </span>
+          </div>
+
+          <!-- Inline Metrics -->
+          <div class="flex items-center gap-3 sm:gap-4 text-xs">
+            <div class="flex items-baseline gap-1">
+              <span class="text-slate-400 text-[11px]">Wind:</span>
+              <span id="w-wind" class="font-bold text-white">-- <span class="text-[10px] font-normal text-slate-300">km/h</span></span>
+            </div>
+            <span class="text-navy-700">|</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-slate-400 text-[11px]">Gusts:</span>
+              <span id="w-gusts" class="font-bold text-dock-gold">-- <span class="text-[10px] font-normal text-slate-300">km/h</span></span>
+            </div>
+            <span class="text-navy-700">|</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-slate-400 text-[11px]">Temp:</span>
+              <span id="w-temp" class="font-bold text-white">-- <span class="text-[10px] font-normal text-slate-300">°C</span></span>
+            </div>
+            <span class="text-navy-700">|</span>
+            <div class="flex items-baseline gap-1">
+              <span class="text-slate-400 text-[11px]">Rain:</span>
+              <span id="w-precip" class="font-bold text-teal-300">-- <span class="text-[10px] font-normal text-slate-300">mm</span></span>
+            </div>
+          </div>
+
+          <span id="weather-updated-at" class="hidden xl:inline text-[10px] text-slate-400">Updating...</span>
+        </div>
+      </div>
+
+      <!-- Primary High-Clarity Today's Sessions Board -->
+      <div class="flex-1 bg-cream-50 rounded-2xl border border-cream-200 shadow-sm flex flex-col overflow-hidden">
+        <div class="px-4 py-3 bg-navy-900 text-white flex items-center justify-between gap-2 shrink-0">
+          <div class="flex items-center gap-2.5">
+            <h2 class="font-serif text-base sm:text-lg font-semibold text-white">Today’s Sessions</h2>
+            <span class="text-[11px] text-slate-300 hidden sm:inline">Live availability &amp; pricing</span>
+          </div>
+          <span id="csv-updated-at" class="text-[11px] font-semibold text-navy-950 bg-dock-gold px-2.5 py-0.5 rounded-full">
+            Loading...
+          </span>
+        </div>
+
+        <div id="sessions-table-container" class="flex-1 overflow-auto">
+          <div class="p-6 text-center text-xs text-ink-500">Loading today's dock sheet...</div>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <script>
+    /**
+     * Dockside Paddle Co. — "Ask Dockside" Live Grounded Chatbot
+     * Connects to:
+     * 1. Sessions CSV: https://bdaib-hub.pages.dev/data/dockside/sessions.csv
+     * 2. Weather JSON: https://api.open-meteo.com/v1/forecast?latitude=53.3441&longitude=-6.2386&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=Europe%2FDublin
+     * 3. Class Brain:  https://bdaib-hub.pages.dev/brain/chat
+     */
+
+    const ENDPOINTS = {
+      SESSIONS_CSV: 'https://bdaib-hub.pages.dev/data/dockside/sessions.csv',
+      WEATHER_API: 'https://api.open-meteo.com/v1/forecast?latitude=53.3441&longitude=-6.2386&current=temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation&timezone=Europe%2FDublin',
+      BRAIN_CHAT: 'https://bdaib-hub.pages.dev/brain/chat'
+    };
+
+    const appState = {
+      rawCsv: '',
+      parsedSessions: [],
+      csvHeaders: [],
+      csvLastFetched: null,
+      sortCol: null,
+      sortAsc: true,
+      weather: null,
+      weatherLastFetched: null,
+      conversationHistory: [],
+      isGenerating: false
+    };
+
+    // Map raw CSV snake_case/lowercase headers into clean, readable UI titles
+    function formatHeaderLabel(rawHeader) {
+      const key = rawHeader.trim().toLowerCase();
+      const map = {
+        'id': 'ID',
+        'session_id': 'ID',
+        'session': 'Session',
+        'activity': 'Activity',
+        'start_time': 'Start Time',
+        'start': 'Start Time',
+        'time': 'Time',
+        'end_time': 'End Time',
+        'price': 'Price',
+        'price_eur': 'Price',
+        'cost': 'Price',
+        'fee': 'Price',
+        'spots': 'Spots Left',
+        'spots_left': 'Spots Left',
+        'places': 'Places Left',
+        'places_left': 'Places Left',
+        'available': 'Available',
+        'capacity': 'Capacity',
+        'max_wind': 'Max Wind',
+        'max_wind_kmh': 'Max Wind',
+        'status': 'Status',
+        'notes': 'Notes'
+      };
+      if (map[key]) return map[key];
+      return rawHeader
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+
+    // Format numeric price values with a clean € sign
+    function formatEuroValue(rawVal) {
+      const str = String(rawVal ?? '').trim();
+      if (!str) return '';
+      if (str.startsWith('€')) return str;
+      // Handle EUR prefix/suffix or plain numbers like "25" or "25.00"
+      const cleaned = str.replace(/^(eur|euro)\s*/i, '').replace(/\s*(eur|euro)$/i, '').trim();
+      const num = parseFloat(cleaned);
+      if (!isNaN(num) && /^[\d.,]+$/.test(cleaned)) {
+        return Number.isInteger(num) ? `€${num}` : `€${num.toFixed(2)}`;
+      }
+      return str;
+    }
+
+    // Parse CSV cleanly including quoted commas
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length === 0) return { headers: [], rows: [] };
+
+      const parseLine = (line) => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              current += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (ch === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      const headers = parseLine(lines[0]);
+      const rows = lines.slice(1).map(line => {
+        const values = parseLine(line);
+        const obj = {};
+        headers.forEach((h, idx) => {
+          obj[h] = values[idx] !== undefined ? values[idx] : '';
+        });
+        return obj;
+      });
+
+      return { headers, rows };
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatTimeNow() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function logDiagnostic(msg) {
+      const logEl = document.getElementById('diag-log');
+      if (!logEl) return;
+      const line = `[${formatTimeNow()}] ${msg}`;
+      if (logEl.textContent === 'Waiting for requests...') {
+        logEl.textContent = line;
+      } else {
+        logEl.textContent = `${line}\n${logEl.textContent}`.slice(0, 2500);
+      }
+    }
+
+    function updateEndpointStatus(key, state, detailText) {
+      const pill = document.getElementById(`pill-${key}`);
+      const diag = document.getElementById(`diag-${key}-status`);
+      const labelMap = { csv: 'Sessions', weather: 'Weather', brain: 'Desk' };
+      const dotColor =
+        state === 'ok' ? 'bg-emerald-400' :
+        state === 'warn' ? 'bg-amber-400' :
+        state === 'err' ? 'bg-rose-400' :
+        'bg-sky-400 animate-pulse';
+
+      if (pill) {
+        pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span> ${labelMap[key] || key}`;
+      }
+      if (diag && detailText) {
+        diag.textContent = detailText;
+      }
+    }
+
+    // Fetch Source 1: Today's Sessions CSV
+    async function fetchSessionsCSV() {
+      updateEndpointStatus('csv', 'loading', 'Fetching...');
+      const fallbackCsvText = `start_time,activity,price,spots_left,status
+09:00,Paddleboard Morning Fitness,20,4,Open
+10:30,Kayaking Discovery Tour,25,2,Open
+12:00,Floating Sauna & Cold Plunge,18,0,Fully Booked
+14:00,Dragon Boat Team Session,30,6,Open
+15:30,Wakeboard Cable Beginner,35,1,Open
+17:00,Evening Sunset Paddleboard,22,5,Open`;
+
+      try {
+        const url = `${ENDPOINTS.SESSIONS_CSV}?t=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const text = await res.text();
+        appState.rawCsv = text.trim();
+        const { headers, rows } = parseCSV(appState.rawCsv);
+        appState.csvHeaders = headers;
+        appState.parsedSessions = rows;
+        appState.csvLastFetched = formatTimeNow();
+        updateEndpointStatus('csv', 'ok', `HTTP ${res.status} · ${rows.length} rows`);
+        logDiagnostic(`CSV synced (${rows.length} sessions)`);
+        renderSessionsTable();
+        return true;
+      } catch (err) {
+        console.warn('Live CSV fetch failed or blocked by CORS, using fallback dock data:', err.message);
+        appState.rawCsv = fallbackCsvText;
+        const { headers, rows } = parseCSV(appState.rawCsv);
+        appState.csvHeaders = headers;
+        appState.parsedSessions = rows;
+        appState.csvLastFetched = `${formatTimeNow()} (Demo Sheet)`;
+        updateEndpointStatus('csv', 'warn', `Fallback (${err.message})`);
+        logDiagnostic(`CSV fallback loaded (${err.message})`);
+        renderSessionsTable();
+        return false;
+      }
+    }
+
+    // Fetch Source 2: Open-Meteo Live Weather at Grand Canal Dock
+    async function fetchWeatherData() {
+      updateEndpointStatus('weather', 'loading', 'Fetching...');
+      try {
+        const res = await fetch(ENDPOINTS.WEATHER_API, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        const cur = data.current || {};
+        appState.weather = {
+          temperature: cur.temperature_2m,
+          windSpeed: cur.wind_speed_10m,
+          windGusts: cur.wind_gusts_10m,
+          precipitation: cur.precipitation,
+          time: cur.time
+        };
+        appState.weatherLastFetched = formatTimeNow();
+        updateEndpointStatus('weather', 'ok', `${cur.wind_speed_10m} km/h · ${cur.temperature_2m}°C`);
+        logDiagnostic(`Weather synced: ${cur.temperature_2m}°C, wind ${cur.wind_speed_10m} km/h, gusts ${cur.wind_gusts_10m} km/h`);
+        renderWeatherBar();
+        return true;
+      } catch (err) {
+        updateEndpointStatus('weather', 'err', err.message);
+        logDiagnostic(`Weather error: ${err.message}`);
+        const badge = document.getElementById('weather-status-badge');
+        if (badge) {
+          badge.textContent = 'Weather Offline';
+          badge.className = 'px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-900/80 text-rose-100';
+        }
+        return false;
+      }
+    }
+
+    function renderWeatherBar() {
+      const w = appState.weather;
+      if (!w) return;
+
+      document.getElementById('w-wind').innerHTML = `${w.windSpeed ?? '--'} <span class="text-[10px] font-normal text-slate-300">km/h</span>`;
+      document.getElementById('w-gusts').innerHTML = `${w.windGusts ?? '--'} <span class="text-[10px] font-normal text-slate-300">km/h</span>`;
+      document.getElementById('w-temp').innerHTML = `${w.temperature ?? '--'} <span class="text-[10px] font-normal text-slate-300">°C</span>`;
+      document.getElementById('w-precip').innerHTML = `${w.precipitation ?? '--'} <span class="text-[10px] font-normal text-slate-300">mm</span>`;
+
+      const updatedEl = document.getElementById('weather-updated-at');
+      if (updatedEl) updatedEl.textContent = `Synced ${appState.weatherLastFetched}`;
+
+      const badge = document.getElementById('weather-status-badge');
+      const wind = Number(w.windSpeed || 0);
+      const gusts = Number(w.windGusts || 0);
+
+      if (wind >= 35 || gusts >= 48) {
+        badge.textContent = 'High Wind · Hold Check';
+        badge.className = 'px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-500/20 text-rose-200 border border-rose-400/40';
+      } else if (wind >= 22 || gusts >= 32) {
+        badge.textContent = 'Breezy · Sheltered Dock';
+        badge.className = 'px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-200 border border-amber-400/40';
+      } else {
+        badge.textContent = 'Good Conditions';
+        badge.className = 'px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/40';
+      }
+    }
+
+    // Refresh both live sources simultaneously
+    async function refreshAllLiveData(manual = false) {
+      const icon = document.getElementById('refresh-icon');
+      if (icon) icon.classList.add('animate-spin');
+      await Promise.allSettled([fetchSessionsCSV(), fetchWeatherData()]);
+      if (icon) {
+        setTimeout(() => icon.classList.remove('animate-spin'), 350);
+      }
+    }
+
+    // Sort table by column header click
+    function sortSessionsBy(headerKey) {
+      if (appState.sortCol === headerKey) {
+        appState.sortAsc = !appState.sortAsc;
+      } else {
+        appState.sortCol = headerKey;
+        appState.sortAsc = true;
+      }
+      renderSessionsTable();
+    }
+
+    // Render Source 1 Table with clean headers, € signs, and click-to-sort
+    function renderSessionsTable() {
+      const container = document.getElementById('sessions-table-container');
+      const updatedBadge = document.getElementById('csv-updated-at');
+      updatedBadge.textContent = `Updated ${appState.csvLastFetched}`;
+
+      if (!appState.parsedSessions.length) {
+        container.innerHTML = `<div class="p-4 text-xs text-ink-500">No sessions listed right now.</div>`;
+        return;
+      }
+
+      // Filter out redundant raw ID column if there are plenty of descriptive columns
+      const visibleHeaders = appState.csvHeaders.filter(h => {
+        const lower = h.trim().toLowerCase();
+        return !(lower === 'id' || lower === 'session_id') || appState.csvHeaders.length <= 3;
+      });
+
+      // Sort rows if a sort column is selected
+      const rowsToRender = [...appState.parsedSessions];
+      if (appState.sortCol) {
+        const col = appState.sortCol;
+        const lowerCol = col.toLowerCase();
+        const dir = appState.sortAsc ? 1 : -1;
+
+        rowsToRender.sort((a, b) => {
+          const valA = String(a[col] ?? '').trim();
+          const valB = String(b[col] ?? '').trim();
+
+          // Numeric comparison for prices, spots, or wind speeds
+          if (
+            lowerCol.includes('price') ||
+            lowerCol.includes('cost') ||
+            lowerCol.includes('fee') ||
+            lowerCol.includes('spot') ||
+            lowerCol.includes('place') ||
+            lowerCol.includes('left') ||
+            lowerCol.includes('wind')
+          ) {
+            const numA = parseFloat(valA.replace(/[^0-9.-]+/g, ''));
+            const numB = parseFloat(valB.replace(/[^0-9.-]+/g, ''));
+            if (!isNaN(numA) && !isNaN(numB)) {
+              return (numA - numB) * dir;
+            }
+          }
+
+          // Time or natural text comparison (handles "09:00", "14:30", or activity names cleanly)
+          return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' }) * dir;
+        });
+      }
+
+      const headersHtml = visibleHeaders.map(h => {
+        const label = formatHeaderLabel(h);
+        const isSorted = appState.sortCol === h;
+        const sortIcon = isSorted
+          ? (appState.sortAsc ? '↑' : '↓')
+          : '↕';
+        const iconClass = isSorted ? 'text-dock-tealDark opacity-100' : 'text-ink-400 opacity-60 group-hover:opacity-100';
+
+        return `<th onclick="sortSessionsBy('${escapeHtml(h)}')" title="Sort by ${escapeHtml(label)}"
+          class="group sticky top-0 z-10 px-3.5 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-navy-900 bg-cream-100 hover:bg-cream-200/80 border-b-2 border-cream-200 whitespace-nowrap cursor-pointer select-none transition">
+          <div class="inline-flex items-center gap-1.5">
+            <span>${escapeHtml(label)}</span>
+            <span class="text-[11px] font-bold ${iconClass}">${sortIcon}</span>
+          </div>
+        </th>`;
+      }).join('');
+
+      const rowsHtml = rowsToRender.map((row, rowIndex) => {
+        const zebraBg = rowIndex % 2 === 1 ? 'bg-cream-100/75' : 'bg-cream-50';
+        const cells = visibleHeaders.map((h, colIndex) => {
+          const val = row[h] ?? '';
+          const lowerH = h.toLowerCase();
+          let cellClass = 'px-3.5 py-2.5 text-xs sm:text-[13px] text-ink-900 border-b border-cream-200/90 whitespace-nowrap';
+          let displayVal = escapeHtml(val);
+
+          if (lowerH.includes('price') || lowerH.includes('cost') || lowerH.includes('fee')) {
+            cellClass += ' font-semibold text-navy-900';
+            displayVal = escapeHtml(formatEuroValue(val));
+          } else if (lowerH.includes('activity') || lowerH.includes('session')) {
+            cellClass += ' font-semibold text-navy-950';
+          } else if (lowerH.includes('spot') || lowerH.includes('place') || lowerH.includes('left')) {
+            const num = parseInt(val, 10);
+            if (!isNaN(num)) {
+              if (num <= 0) {
+                displayVal = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">0 · Full</span>`;
+              } else if (num <= 2) {
+                displayVal = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900">${num} left</span>`;
+              } else {
+                displayVal = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900">${num} spots</span>`;
+              }
+            }
+          } else if (lowerH.includes('status')) {
+            const s = val.toLowerCase();
+            if (s.includes('full') || s.includes('sold') || s.includes('cancel') || s.includes('closed')) {
+              displayVal = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-100 text-rose-800">${escapeHtml(val)}</span>`;
+            } else {
+              displayVal = `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-teal-100 text-teal-900">${escapeHtml(val)}</span>`;
+            }
+          }
+
+          return `<td class="${cellClass}">${displayVal}</td>`;
+        }).join('');
+
+        return `<tr class="${zebraBg} hover:bg-cream-200/45 transition-colors">${cells}</tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="w-full border-collapse text-left">
+          <thead>
+            <tr>${headersHtml}</tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Build grounded system prompt from live CSV + live Weather
+    function buildGroundedSystemPrompt() {
+      const w = appState.weather;
+      const weatherSummary = w
+        ? `LIVE WEATHER AT GRAND CANAL DOCK (${appState.weatherLastFetched}):
+- Temperature: ${w.temperature}°C
+- Wind Speed (10m): ${w.windSpeed} km/h
+- Wind Gusts (10m): ${w.windGusts} km/h
+- Precipitation: ${w.precipitation} mm`
+        : 'LIVE WEATHER: Unavailable right now.';
+
+      const sessionsSummary = appState.rawCsv
+        ? `TODAY'S LIVE SESSIONS CSV (${appState.csvLastFetched}):\n${appState.rawCsv}`
+        : 'TODAY\'S SESSIONS CSV: Unavailable right now.';
+
+      return `You are the helpful front-desk assistant for Dockside Paddle Co. at Grand Canal Dock, Dublin (five minutes from NCI). We offer paddleboards, kayaks, a dragon boat, a wakeboard cable, and a floating sauna.
+CRITICAL RULE: Answer ONLY using the live data provided below. Never invent prices, times, or availability from memory. Keep answers concise, friendly, and clear, using € for prices.
+
+${weatherSummary}
+
+${sessionsSummary}`;
+    }
+
+    function formatAssistantMarkdown(text) {
+      let safe = escapeHtml(text);
+      safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-navy-900">$1</strong>');
+      safe = safe.replace(/\n/g, '<br>');
+      return safe;
+    }
+
+    function appendMessageBubble(role, htmlContent, isTyping = false) {
+      const container = document.getElementById('chat-messages');
+      const wrapper = document.createElement('div');
+
+      if (role === 'user') {
+        wrapper.className = 'flex flex-col items-end';
+        wrapper.innerHTML = `
+          <div class="bg-navy-900 text-white rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-xs sm:text-sm max-w-[85%] shadow-2xs leading-relaxed">
+            ${escapeHtml(htmlContent)}
+          </div>
+        `;
+      } else {
+        wrapper.className = 'flex flex-col items-start max-w-[92%]';
+        const innerBody = isTyping
+          ? `<div class="flex items-center gap-1 py-1 px-1"><span class="w-1.5 h-1.5 rounded-full bg-navy-900 typing-dot"></span><span class="w-1.5 h-1.5 rounded-full bg-navy-900 typing-dot"></span><span class="w-1.5 h-1.5 rounded-full bg-navy-900 typing-dot"></span></div>`
+          : htmlContent;
+
+        wrapper.innerHTML = `
+          <div class="text-[10px] font-bold uppercase tracking-wider text-navy-900 mb-1">Dockside Desk</div>
+          <div class="bot-bubble bg-cream-50 border border-cream-200 text-ink-900 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed shadow-2xs">
+            ${innerBody}
+          </div>
+        `;
+      }
+
+      container.appendChild(wrapper);
+      container.scrollTop = container.scrollHeight;
+      return wrapper;
+    }
+
+    async function callClassBrain(userText) {
+      updateEndpointStatus('brain', 'loading', 'Thinking...');
+      const systemPrompt = buildGroundedSystemPrompt();
+      const messagesPayload = [
+        { role: 'system', content: systemPrompt },
+        ...appState.conversationHistory.slice(-6),
+        { role: 'user', content: userText }
+      ];
+
+      // Try standard OpenAI/messages schema first, fallback to { message, system } if 400/422
+      const payloads = [
+        { label: 'messages[]', body: { messages: messagesPayload } },
+        { label: 'message+system', body: { message: userText, system: systemPrompt, history: appState.conversationHistory.slice(-6) } }
+      ];
+
+      let lastErr = '';
+      for (const attempt of payloads) {
+        try {
+          const res = await fetch(ENDPOINTS.BRAIN_CHAT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(attempt.body)
+          });
+
+          const rawText = await res.text();
+          if (!res.ok) {
+            lastErr = `HTTP ${res.status} (${attempt.label}): ${rawText.slice(0, 180)}`;
+            logDiagnostic(lastErr);
+            if (res.status === 400 || res.status === 422) continue;
+            throw new Error(lastErr);
+          }
+
+          let parsed;
+          try {
+            parsed = JSON.parse(rawText);
+          } catch {
+            parsed = { reply: rawText };
+          }
+
+          const replyText =
+            parsed.reply ||
+            parsed.response ||
+            parsed.message ||
+            parsed.content ||
+            parsed.choices?.[0]?.message?.content ||
+            (typeof parsed === 'string' ? parsed : JSON.stringify(parsed));
+
+          updateEndpointStatus('brain', 'ok', `HTTP ${res.status}`);
+          logDiagnostic(`Brain replied (${attempt.label})`);
+          return replyText;
+        } catch (err) {
+          lastErr = err.message;
+        }
+      }
+
+      updateEndpointStatus('brain', 'err', 'Blocked / Offline');
+      throw new Error(lastErr || 'Unable to reach Class Brain.');
+    }
+
+    async function submitQuestion(questionText) {
+      const trimmed = questionText.trim();
+      if (!trimmed || appState.isGenerating) return;
+
+      appState.isGenerating = true;
+      const sendBtn = document.getElementById('send-btn');
+      if (sendBtn) sendBtn.disabled = true;
+
+      appendMessageBubble('user', trimmed);
+      const typingWrapper = appendMessageBubble('assistant', '', true);
+      const bubbleEl = typingWrapper.querySelector('.bot-bubble');
+
+      // Refresh live CSV & weather right before answering so spots/weather are up-to-the-minute
+      await refreshAllLiveData(false);
+
+      try {
+        const answer = await callClassBrain(trimmed);
+        bubbleEl.innerHTML = formatAssistantMarkdown(answer);
+        appState.conversationHistory.push(
+          { role: 'user', content: trimmed },
+          { role: 'assistant', content: answer }
+        );
+      } catch (err) {
+        const isOriginBlock = err.message.includes('403') || err.message.toLowerCase().includes('origin');
+        bubbleEl.innerHTML = `
+          <div class="text-rose-800 font-semibold mb-1">Could not reach the Class Brain</div>
+          <div class="text-xs bg-rose-50 border border-rose-200 rounded-lg p-2 font-mono text-rose-900 mb-1.5">${escapeHtml(err.message)}</div>
+          <p class="text-[11px] text-ink-500">
+            ${isOriginBlock
+              ? 'Note: The BDAIB brain only accepts requests from local files (file://), localhost, or github.io pages.'
+              : 'Check the Logs drawer above for details.'}
+          </p>
+        `;
+      } finally {
+        appState.isGenerating = false;
+        if (sendBtn) sendBtn.disabled = false;
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const input = document.getElementById('user-input');
+      const val = input.value;
+      input.value = '';
+      submitQuestion(val);
+    }
+
+    function sendQuickPrompt(promptText) {
+      submitQuestion(promptText);
+    }
+
+    function clearChat() {
+      appState.conversationHistory = [];
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = `
+        <div class="bg-cream-50 border border-cream-200 rounded-xl p-3.5 shadow-2xs">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-dock-tealDark mb-1">Grand Canal Dock · Live Info</p>
+          <h2 class="font-serif text-base font-semibold text-navy-900 leading-snug mb-1">
+            Heading out on the water today?
+          </h2>
+          <p class="text-xs text-ink-700 leading-relaxed">
+            Ask about prices, spaces left, or wind suitability. Answers come straight from our live dock sheet and weather feed.
+          </p>
+        </div>
+      `;
+    }
+
+    function toggleDiagnostics() {
+      const drawer = document.getElementById('diagnostics-drawer');
+      if (drawer) drawer.classList.toggle('hidden');
+    }
+
+    function toggleMobileInspector() {
+      const panel = document.getElementById('inspector-panel');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        panel.classList.add('flex', 'fixed', 'inset-0', 'z-40', 'bg-cream-100', 'p-3', 'h-screen');
+        if (!document.getElementById('mobile-drawer-close')) {
+          const closeBar = document.createElement('div');
+          closeBar.id = 'mobile-drawer-close';
+          closeBar.className = 'flex items-center justify-between bg-navy-900 text-white px-3.5 py-2.5 rounded-xl lg:hidden shrink-0';
+          closeBar.innerHTML = `
+            <span class="font-serif text-sm font-semibold">Dock Weather &amp; Sessions</span>
+            <button onclick="toggleMobileInspector()" class="text-xs bg-dock-gold text-navy-950 px-3 py-1 rounded-lg font-bold">Back to Chat</button>
+          `;
+          panel.prepend(closeBar);
+        }
+      } else {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex', 'fixed', 'inset-0', 'z-40', 'bg-cream-100', 'p-3', 'h-screen');
+        const closeBar = document.getElementById('mobile-drawer-close');
+        if (closeBar) closeBar.remove();
+      }
+    }
+
+    // Initialize live sync immediately on load and auto-refresh every 5 minutes
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshAllLiveData(false);
+      setInterval(() => refreshAllLiveData(false), 5 * 60 * 1000);
+    });
+  </script>
+</body>
+</html>
